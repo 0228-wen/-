@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http:www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<link rel="stylesheet" href="http://localhost:63342/BookConduct/static/index.css"/>
+<!--
+改变字体颜色
+-->
+<style>
+    .item .el-form-item__label{
+        color: paleturquoise;
+    }
+</style>
+<body>
+<img width="100%" height="100%" src="http://localhost:63342/BookConduct/static/image/regi.jpg" style="position:absolute; left:0; top:0; z-index:-1;"/>
+<div id="app" style="position:absolute;left: 100px;right:0;top:300px;bottom: 0;width:350px;height:300px;">
+    <el-dialog
+            title="提示"
+            :visible.sync="dialogVisible"
+            width="30%"
+            :before-close="handleClose">
+        <font size="4">用户名已存在</font>
+    </el-dialog>
+    <el-dialog
+            title="提示"
+            :visible.sync="dialogVisible1"
+            width="30%"
+            :before-close="handleClose">
+        <font size="4">用户名不能为空</font>
+    </el-dialog>
+    <p style="margin-left:180px"><font size="4" color="paleturquoise">欢迎注册</font></p></br>
+    <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="用户" prop="name" class="item">
+            <el-input v-model.number="ruleForm.name"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="pass" class="item">
+            <el-input type="password" v-model="ruleForm.pass" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="checkPass" class="item">
+            <el-input type="password" v-model="ruleForm.checkPass" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item align="center">
+            <el-button type="primary" round @click="onSumbit">提交</el-button>
+            <el-button type="danger" round @click="ronSumbit">重置</el-button>
+        </el-form-item>
+    </el-form>
+</div>
+</body>
+<script src="http://localhost:63342/BookConduct/element/vue.js" charset="utf-8"></script>
+<script src="http://localhost:63342/BookConduct/element/index.js" charset="utf-8"></script>
+<script src="http://localhost:63342/BookConduct/element/axios.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            var checkName = (rule, value, callback) => {
+                if (value === '') {
+                    return callback(new Error('用户名不能为空'));
+                }
+                setTimeout(() => {
+                    callback();
+                }, 1000);
+            };
+            var validatePass = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请输入密码'));
+                } else {
+                    if (this.ruleForm.checkPass !== '') {
+                        this.$refs.ruleForm.validateField('checkPass');
+                    }
+                    callback();
+                }
+            };
+            var validatePass2 = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请再次输入密码'));
+                } else if (value !== this.ruleForm.pass) {
+                    callback(new Error('两次输入密码不一致!'));
+                } else {
+                    callback();
+                }
+            };
+            return {
+                ruleForm: {
+                    pass: '',
+                    checkPass: '',
+                    name: ''
+                },
+                user:{
+                    username:'',
+                    password:''
+                },
+                dialogVisible:false,
+                dialogVisible1:false,
+                rules: {
+                    pass: [
+                        {validator: validatePass, trigger: 'blur'}
+                    ],
+                    checkPass: [
+                        {validator: validatePass2, trigger: 'blur'}
+                    ],
+                    name: [
+                        {validator: checkName, trigger: 'blur'}
+                    ]
+                }
+            };
+        },
+        methods: {
+            //注册事件
+            onSumbit() {
+                if(this.ruleForm.username=="")
+                {
+                    this.dialogVisible1=true;
+                }
+                else {
+                    this.user.username = this.ruleForm.name;
+                    this.user.password = this.ruleForm.pass;
+                    axios({
+                        method: "post",
+                        url: "/rename",
+                        data: this.user
+                    }).then(response => {
+                        if (response.data == 1) {
+                            window.location.href = "/index";
+                        } else {
+                            this.dialogVisible = true;
+                        }
+                    })
+                }
+            },
+
+            ronSumbit() {
+                this.ruleForm={}
+            }
+        }
+    })
+</script>
+</html>

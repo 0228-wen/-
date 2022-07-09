@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http:www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+</head>
+<link rel="stylesheet" href="http://localhost:63342/BookConduct/static/index.css"/>
+<!--
+改变字体颜色
+-->
+<style>
+    .item .el-form-item__label{
+        color: greenyellow;
+    }
+</style>
+<body>
+    <img width="100%" height="100%" src="http://localhost:63342/BookConduct/static/image/img2.jpg" style="position:absolute; left:0; top:0; z-index:-1;"/>
+
+<div id="app" style="position:absolute;left: 100px;right:0;top:300px;bottom: 0;width:350px;height:300px;">
+    <el-dialog
+            title="提示"
+            :visible.sync="dialogVisible"
+            width="30%"
+            :before-close="handleClose">
+       <font size="4">用户名或者密码不正确</font>
+    </el-dialog>
+    <el-dialog
+            title="提示"
+            :visible.sync="dialogVisible1"
+            width="30%"
+            :before-close="handleClose">
+        <font size="4">用户名不能为空</font>
+    </el-dialog>
+    <p style="margin-left:180px"><font size="4" color="greenyellow">欢迎登陆</font></p></br>
+    <el-form ref="form" :model="user" label-width="80px" >
+    <el-form-item label="用户" class="item">
+        <el-input v-model="user.username"></el-input>
+    </el-form-item>
+    <el-form-item label="密码" class="item">
+        <el-input type="password" v-model="user.password"></el-input>
+    </el-form-item>
+    <el-form-item align="center">
+    <el-form-item>
+        <el-button type="success" round @click="lonSumbit">登陆</el-button>
+        <el-button type="warning" round @click="ponSumbit">取消</el-button>
+    </el-form-item>
+        <el-link type="danger" href="/register">新用户注册</el-link>
+    </el-form-item>
+</el-form>
+</div>
+</body>
+<script src="http://localhost:63342/BookConduct/element/vue.js" charset="utf-8"></script>
+<script src="http://localhost:63342/BookConduct/element/index.js" charset="utf-8"></script>
+<script src="http://localhost:63342/BookConduct/element/axios.js"></script>
+<script>
+    new Vue({
+        el:'#app',
+        methods : {
+            //登陆取消
+            ponSumbit(){
+                this.user={};
+            },
+            //登陆,利用href属性对网址进行转发处理
+            lonSumbit (){
+                if(this.user.username=="")
+                {
+                    this.dialogVisible1=true;
+                }
+                else {
+                    axios({
+                        method: "post",
+                        url: "/userlogin",
+                        data: this.user
+                    }).then(response => {
+                        if (response.data == 1) {
+                            window.location.href = "/zhuye";
+                        } else {
+                            this.dialogVisible = true;
+                        }
+                    })
+                }
+            }
+        },
+        data(){
+            return {
+                /*
+                * 对话框展示
+                * */
+                dialogVisible:false,
+                dialogVisible1:false,
+                /*
+                * 登陆表单的数据
+                * */
+                user:{
+                    username:'',
+                    password:''
+                }
+            };
+        }
+
+    })
+</script>
+</html>

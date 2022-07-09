@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http:www.thymeleaf.org">
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+    <link rel="stylesheet" href="http://localhost:63342/BookConduct/static/index.css"/>
+
+<body>
+<div id="app">
+    <h1 align="center">图书管理系统</h1><br>
+<!--搜索表单-->
+    <el-form :inline="true" :model="booken" class="demo-form-inline" align="center">
+        <el-form-item header-align="left">
+        <el-button type="danger" @click="donSumbit">批量删除</el-button>
+        <el-button type="primary" @click="dialogVisible = true">新增书籍</el-button>
+        </el-form-item>&nbsp;         &nbsp;
+        <el-form-item label="书籍名称">
+            <el-input v-model="booken.bookname" placeholder="书籍名称"></el-input>
+        </el-form-item>
+        <el-form-item label="书籍作者">
+            <el-input v-model="booken.author" placeholder="书籍作者"></el-input>
+        </el-form-item>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="ponSubmit">查询</el-button>
+        </el-form-item>
+    </el-form>
+<!--    新增数据的表单数据-->
+    <el-dialog
+            title="新增书籍"
+            :visible.sync="dialogVisible"
+            width="30%"
+    >
+        <el-form ref="form" :model="book" label-width="70px">
+            <el-form-item label="书籍名称">
+                <el-input v-model="book.bookname"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍作者">
+                <el-input v-model="book.author"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍价格">
+                <el-input v-model="book.price"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍简介">
+                <el-input type="textarea" v-model="book.des"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="onSubmit">立即创建</el-button>&nbsp;&nbsp;&nbsp;&nbsp;
+                <el-button @click="cancel">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+<!--    //修改的对话框-->
+    <el-dialog
+            title="编辑书籍"
+            :visible.sync="dialogVisible1"
+            width="30%"
+    >
+        <el-form ref="form" :model="bookun" label-width="70px">
+            <el-form-item>
+                <el-input v-model="bookun.id" v-show="false"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍名称">
+                <el-input v-model="bookun.bookname"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍作者">
+                <el-input v-model="bookun.author"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍价格">
+                <el-input v-model="bookun.price"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍简介">
+                <el-input type="textarea" v-model="bookun.des"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="onUpdate">确定</el-button>&nbsp;&nbsp;&nbsp;&nbsp;
+                <el-button @click="cancel">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+    <!--书籍表格-->
+    <template>
+        <el-table
+                :data="tableData"
+                style="width: 100% ;height:100%"
+                @selection-change="handleSelectionChange"  >     <!-- 复选框事件-->
+            <el-table-column
+                    type="selection"
+                    align="center"
+                    width="55">
+            </el-table-column>
+            <el-table-column
+                    prop="id"
+                    label="序号">
+            </el-table-column>
+            <el-table-column
+                    prop="bookname"
+                    label="书籍名称">
+            </el-table-column>
+            <el-table-column
+                    prop="author"
+                    label="书籍作者">
+            </el-table-column>
+            <el-table-column
+                    prop="des"
+                    label="书籍描述">
+            </el-table-column>
+            <el-table-column
+                    prop="price"
+                    align="center"
+                    label="书籍价格">
+            </el-table-column>
+            <el-table-column
+                    align="center"
+                    label="操作">
+                <template slot-scope="scope">
+                <el-row>
+            <!-- 按钮事件-->
+                    <el-button type="success" plain @click="updateById(scope.$index,scope.row)">修改</el-button>
+                    <el-button type="warning" plain  @click="onDelete(scope.$index,scope.row)">删除</el-button>
+                </el-row>
+                </template>
+            </el-table-column>
+        </el-table>
+    </template>
+<!--    分页布局-->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[5, 10, 15, 20]"
+            :page-size="5"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="totalcount"><!--            分页的总数-->
+    </el-pagination>
+</div>
+</body>
+<script src="http://localhost:63342/BookConduct/element/vue.js" charset="utf-8"></script>
+<script src="http://localhost:63342/BookConduct/element/index.js" charset="utf-8"></script>
+<script src="http://localhost:63342/BookConduct/element/axios.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        //页面加载完成时
+        mounted(){
+            this.selectAll()
+        },
+        methods:{
+            //获取修改书籍的id
+            updateById(index,row){
+                this.dialogVisible1=true;
+                var idu=row.id;
+                axios({
+                    method:"get",
+                    url:"http://localhost:8080/backById?id="+idu,
+                }).then(response =>
+                {
+                    this.bookun=response.data;
+                })
+            },
+            //取消按钮
+            cancel(){
+                this.dialogVisible1=false;
+                this.dialogVisible=false;
+                this.book={}
+            },
+            //修改书籍
+            onUpdate(){
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/update",
+                    data:this.bookun
+                }).then(response =>
+                {
+                    if(response.data===1)
+                    {
+                        this.$message({
+                            message: '恭喜你，修改成功',
+                            type: 'success'
+                        });
+                        this.selectAll();
+                    }
+                    else
+                    {
+                        this.$message.error('错了哦，修改失败');
+                    }
+                    this.dialogVisible1=false;
+                })
+            },
+            //单个删除
+            onDelete(index,row){
+                var idl=row.id;
+                axios({
+                    method:"get",
+                    url:"http://localhost:8080/onDelete?id="+idl,
+                }).then(response =>
+                    {
+                    if(response.data===1)
+                    {
+                        this.$message({
+                            message: '恭喜你，删除成功',
+                            type: 'success'
+                        });
+                        this.selectAll();
+                    }
+                    else
+                    {
+                        this.$message.error('错了哦，删除失败');
+                    }
+                })
+            },
+            // 批量删除书籍
+            donSumbit(){
+                for (let i = 0; i < this.multipleSelection.length; i++) {
+                    this.selectIds[i]=this.multipleSelection[i].id;
+                }
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/delete",
+                    data:this.selectIds
+                }).then(response =>{
+                        if(response.data==1)
+                        {
+                            this.$message({
+                                message: '恭喜你，删除成功',
+                                type: 'success'
+                            });
+                            this.selectAll();
+                        }
+                        else
+                        {
+                            this.$message.error('错了哦，删除失败');
+                        }
+                    }
+                )
+            },
+            // 将查询所有书籍写成一个方法
+            selectAll(){
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/limitBy?page="+this.currentPage+"&pagesize="+this.pagesize,
+                    data:this.booken
+                }).then(response => {
+                    this.tableData = response.data.rows
+                    this.totalcount=response.data.totalCount
+                })
+            },
+            //每页显示的条数
+            handleSizeChange(val) {
+               this.pagesize=val;
+               this.selectAll();
+            },
+            //页码变化
+            handleCurrentChange(val) {
+                this.currentPage=val;
+                this.selectAll();
+            },
+            //添加书籍事件
+            onSubmit (){
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/add",
+                    data:this.book
+                }).then(response =>{
+                    if(response.data==1)
+                    {
+                        this.$message({
+                            message: '恭喜你，添加成功',
+                            type: 'success'
+                        });
+                        this.dialogVisible = false;
+                        this.selectAll();
+                        this.book={}
+                    }
+                    else
+                    {
+                        this.$message.error('错了哦，添加失败');
+                        this.dialogVisible = false;
+                    }
+                }
+                    )
+            },
+            // 搜索框提交事件,查询事件
+            ponSubmit() {
+               this.selectAll();
+            },
+            // 复选框点击事件
+            handleSelectionChange(val){
+                this.multipleSelection = val;
+            }
+        },
+        data() {
+            return {
+                //修改时的对话框
+                dialogVisible1:false,
+                //分页条数
+                pagesize:'5',
+                //分页总数
+                totalcount:'',
+                //当前页码
+                currentPage:1,
+                // 新增按钮是否可视
+                dialogVisible:false,
+                // 添加书籍数据
+                book: {
+                    id:'',
+                    bookname: '',
+                    author: '',
+                    price: '',
+                    des: ''
+                },
+                // 复选框选中数据里面的id值数组
+                selectIds: [],
+                // 复选框选中数据
+                multipleSelection: [],
+                // 书籍表格填充数据
+                tableData: {
+                     id: '',
+                    bookname: '',
+                    author: '',
+                    des: '',
+                    price: '',
+                },
+                booken:{
+                    bookname:'',
+                    author:'',
+                },
+                bookun: {
+                    id:'',
+                    bookname: '',
+                    author: '',
+                    price: '',
+                    des: ''
+                },
+            }
+        }
+    })
+</script>
+</html>

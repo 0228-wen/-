@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zdw.Mapper.BookMapper">
+<!--    插入书籍-->
+    <insert id="addBook">
+        insert into book values(null,#{bookname},#{author},#{des},#{price})
+    </insert>
+    <!--
+    修改书籍
+    -->
+    <update id="onUpdate">
+        update book set bookname=#{bookname},author=#{author},des=#{des},price=#{price} where id=#{id}
+    </update>
+    <!--    批量删除书籍-->
+    <delete id="deleteBook">
+        delete from book where id in
+<foreach collection="ids" item="id" separator="," open="(" close=")">
+#{id}
+</foreach>
+    </delete>
+
+    <!--单个删除按钮-->
+    <delete id="onDelete">
+        delete from book where id = #{id}
+    </delete>
+
+    <!--查询所有-->
+    <select id="selectAll" resultType="com.zdw.Bean.Book">
+        select * from book
+    </select>
+<!--    /*-->
+<!--    * 分页查询-->
+<!--    * 页码-->
+<!--    * 条数-->
+<!--    * */-->
+    <select id="selectBypage" resultType="com.zdw.Bean.Book">
+        select * from book limit #{begin},#{size}
+    </select>
+    <select id="selectTotal" resultType="java.lang.Integer">
+        select count(*) from book
+    </select>
+
+<!--    分页查询高级版本！条件-->
+    <select id="selectTotalBy" resultType="java.lang.Integer">
+        -- 动态SQL查询
+        select count(*) from book
+        <where>
+            <if test="bookname!=null and  bookname!='' ">
+                and  bookname like #{bookname}
+            </if>
+            <if test=" author!=null and author!='' ">
+                and  author like #{author}
+            </if>
+        </where>
+    </select>
+    <select id="selectBypageBy" resultType="com.zdw.Bean.Book">
+-- 动态SQL查询
+        select * from book
+            <where>
+            <if test="book.bookname!=null and  book.bookname!=''">
+            and  bookname like #{book.bookname}
+            </if>
+        <if test="book.author!=null and book.author!=''">
+            and  author like #{book.author}
+        </if>
+            </where>
+            limit #{begin},#{size}
+    </select>
+    <!--
+    回显数据根据id
+    -->
+    <select id="backByID" resultType="com.zdw.Bean.Book">
+        select * from book where id=#{id}
+    </select>
+
+</mapper>
